@@ -61,18 +61,37 @@ Open your browser at: **`http://localhost:8000`**
 
 ### 🟣 2. Discord Chats (DMs or Channels)
 
-The easiest and fastest method is using the free, open-source tool **DiscordChatExporter**:
+The recommended tool for exporting Discord chats is the free, open-source **[DiscordChatExporter](https://github.com/Tyrrrz/DiscordChatExporter)**:
 
-1. Download **`DiscordChatExporter.win-x64.zip`** (GUI version) from the [DiscordChatExporter Releases page](https://github.com/Tyrrrz/DiscordChatExporter/releases).
-2. Extract and run `DiscordChatExporter.exe`.
-3. Retrieve your Discord token:
-   - In Discord (desktop or web at [discord.com/app](https://discord.com/app)), press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>I</kbd> to open Developer Tools.
-   - Click the **Network** tab.
-   - Click on any channel or send a message.
-   - Click on any request to `api/v9/...` (e.g. `messages`), look at the **Request Headers** on the right, and copy the `Authorization` token.
-4. Paste the token into DiscordChatExporter.
-5. Select your friend's Direct Message (DM) or server channel.
-6. Click the download icon (bottom right), select format **JSON** (or **Plain Text**), and click **Export**.
+1. Download **`DiscordChatExporter.win-x64.zip`** (GUI version) from the [Releases page](https://github.com/Tyrrrz/DiscordChatExporter/releases).
+2. Extract the archive and launch `DiscordChatExporter.exe`.
+
+> 💡 **Tip:** When using the DiscordChatExporter GUI, simply follow the visual guide and prompts inside the application itself — it is often the simplest and most up-to-date method!
+
+> ⚠️ **Important Warnings (from DiscordChatExporter):**
+> - **Do not share your token!** A token grants full access to your Discord account. If your token is ever exposed, change your Discord account password immediately to reset it.
+> - **Terms of Service:** Automating user accounts violates Discord's Terms of Service and carries a risk of account termination. Use at your own risk.
+
+#### How to Fetch Your Discord User Token:
+
+- **Method 1: Browser Console (Fastest)**
+  1. Open [discord.com](https://discord.com) in your web browser and log in.
+  2. Press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>I</kbd> (<kbd>⌥</kbd> + <kbd>⌘</kbd> + <kbd>I</kbd> on macOS) to open Developer Tools.
+  3. Go to the **Console** tab, paste the following line, and press <kbd>Enter</kbd>:
+     ```javascript
+     let m;webpackChunkdiscord_app.push([[Math.random()],{},e=>{for(let i in e.c){let x=e.c[i];if(x?.exports?.getToken){m=x;break}}}]);m&&console.log("Token:",m.exports.getToken());
+     ```
+  4. Copy your token from the output.
+
+- **Method 2: Network Monitor (Alternative)**
+  1. In DevTools, switch to the **Network** tab and refresh the page (<kbd>F5</kbd>).
+  2. In the **Filter** box, type `messages` and select any matching request (click a chat if none appear).
+  3. Under the **Headers** tab, locate `authorization:` in the request headers and copy its value.
+
+#### Exporting the Chat:
+3. Paste your token into DiscordChatExporter.
+4. Select your friend's Direct Message (DM) or server channel.
+5. Click the download icon (bottom right), select format **JSON** (or **Plain Text**), and click **Export**.
 
 ---
 
