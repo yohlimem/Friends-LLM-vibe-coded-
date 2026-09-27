@@ -81,11 +81,15 @@
                 <div class="card grid-split">
                     <div class="upload-zone-wrapper">
                         <h2><i class="fa-solid fa-cloud-arrow-up"></i> העלאת קבצי צ'אט (WhatsApp & Discord)</h2>
-                        <p class="subtitle">תוכל לבחור ולהעלות מספר קבצי צ'אט במקביל (גם <code>.txt</code> של WhatsApp וגם <code>.json</code>/<code>.txt</code> של Discord) - המערכת תמזג את כל השיחות!</p>
+                        <p class="subtitle">
+                            <strong>WhatsApp Web / Windows App:</strong> לחץ על פרופיל החבר בראש הצ'אט, גלול למטה ובחר <em>ייצא צ'אט</em> (ללא מדיה).<br>
+                            <strong>Discord:</strong> ייצא דרך DiscordChatExporter לקובץ <code>.json</code> או <code>.txt</code>.<br>
+                            <em>טיפ: ניתן לגרור קובץ אחד ולאחר מכן לגרור קובץ נוסף – המערכת תצבור ותמזג את כל השיחות!</em>
+                        </p>
                         
                         <div class="drop-zone" id="dropZone">
                             <i class="fa-solid fa-file-lines drop-icon"></i>
-                            <p class="drop-text">גרוב והשלך לכאן קבצי <code>.txt</code> ו-<code>.json</code> של WhatsApp ו-Discord</p>
+                            <p class="drop-text">גרוב והשלך לכאן קבצי <code>.txt</code> ו-<code>.json</code> (קבצים נגררים מצטברים אוטומטית!)</p>
                             <span class="or-divider">או</span>
                             <label for="chatFileInput" class="btn primary-btn">
                                 <i class="fa-solid fa-folder-open"></i> בחר קבצים מהמחשב
@@ -93,10 +97,15 @@
                             <input type="file" id="chatFileInput" accept=".txt,.json,.zip" multiple hidden>
                         </div>
 
-                        <!-- Uploaded Files List Pill -->
-                        <div id="fileListContainer" class="margin-top" style="display: none;">
-                            <small class="help-text"><strong>קבצים שטענת בדיאלוג:</strong></small>
-                            <div id="fileListPills" style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px;"></div>
+                        <!-- Uploaded Files List Container -->
+                        <div id="fileListContainer" class="margin-top" style="display: none; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 10px 14px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <small class="help-text" style="font-weight: 600; color: var(--text-muted);"><i class="fa-solid fa-layer-group"></i> קבצים מצטברים שנטענו (<span id="fileCountBadge">0</span>):</small>
+                                <button type="button" id="btnClearFiles" class="btn-tag" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.3); padding: 2px 8px; font-size: 0.75rem;">
+                                    <i class="fa-solid fa-trash"></i> נקה קבצים
+                                </button>
+                            </div>
+                            <div id="fileListPills" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
                         </div>
                     </div>
 

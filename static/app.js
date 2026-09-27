@@ -507,9 +507,11 @@ document.addEventListener("DOMContentLoaded", () => {
             `You are an AI clone of ${friendName}. Mix Hebrew and English naturally ('bro', 'insane', 'סגור אחי', 'legit'). Speak casually.`;
     });
 
-    // --- FILE UPLOAD & PARSING ---
+    // --- FILE UPLOAD & PARSING (ACCUMULATING MULTI-FILE QUEUE) ---
     const dropZone = document.getElementById("dropZone");
     const chatFileInput = document.getElementById("chatFileInput");
+    const btnClearFiles = document.getElementById("btnClearFiles");
+    let accumulatedFiles = [];
 
     ['dragenter', 'dragover'].forEach(eventName => {
         dropZone.addEventListener(eventName, (e) => {
@@ -529,23 +531,110 @@ document.addEventListener("DOMContentLoaded", () => {
         const dt = e.dataTransfer;
         const files = dt.files;
         if (files && files.length > 0) {
-            handleFileUpload(files);
+            addIncomingFiles(files);
         }
     });
 
     chatFileInput.addEventListener("change", (e) => {
         if (e.target.files && e.target.files.length > 0) {
-            handleFileUpload(e.target.files);
+            addIncomingFiles(e.target.files);
+            chatFileInput.value = ""; // Reset so same file can be re-selected if removed
         }
     });
 
-    async function handleFileUpload(filesInput) {
-        const formData = new FormData();
-        const files = Array.from(filesInput);
-        
-        files.forEach(f => formData.append("files", f));
+    if (btnClearFiles) {
+        btnClearFiles.addEventListener("click", () => {
+            accumulatedFiles = [];
+            uploadAccumulatedFiles();
+            appendConsoleLog("[Upload] כל הקבצים שנטענו נוקו.");
+        });
+    }
 
-        appendConsoleLog(`[Upload] מעלה ומפענח ${files.length} קבצי צ'אט...`);
+    function addIncomingFiles(filesInput) {
+        const incoming = Array.from(filesInput);
+        let addedCount = 0;
+
+        incoming.forEach(newFile => {
+            const exists = accumulatedFiles.some(
+                existing => existing.name === newFile.name && existing.size === newFile.size && existing.lastModified === newFile.lastModified
+            );
+            if (!exists) {
+                accumulatedFiles.push(newFile);
+                addedCount++;
+            }
+        });
+
+        if (addedCount > 0) {
+            uploadAccumulatedFiles();
+        } else {
+            appendConsoleLog("[Upload] הקבצים שגררת כבר קיימים ברשימה המצטברת.");
+        }
+    }
+
+    function removeAccumulatedFile(idx) {
+        if (idx >= 0 && idx < accumulatedFiles.length) {
+            const removed = accumulatedFiles.splice(idx, 1)[0];
+            appendConsoleLog(`[Upload] הקובץ '${removed.name}' הוסר מהרשימה המצטברת.`);
+            uploadAccumulatedFiles();
+        }
+    }
+
+    function renderFileListPills() {
+        const fileContainer = document.getElementById("fileListContainer");
+        const filePills = document.getElementById("fileListPills");
+        const countBadge = document.getElementById("fileCountBadge");
+
+        if (!fileContainer || !filePills) return;
+
+        if (accumulatedFiles.length === 0) {
+            fileContainer.style.display = "none";
+            filePills.innerHTML = "";
+            return;
+        }
+
+        fileContainer.style.display = "block";
+        filePills.innerHTML = "";
+        if (countBadge) countBadge.textContent = accumulatedFiles.length;
+
+        accumulatedFiles.forEach((file, index) => {
+            const pill = document.createElement("div");
+            pill.style.cssText = "display: inline-flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.12); padding: 5px 10px; border-radius: 6px; font-size: 0.82rem; color: var(--text-main);";
+            
+            const isDiscord = file.name.endsWith(".json") || file.name.toLowerCase().includes("discord");
+            const iconClass = isDiscord ? "fa-brands fa-discord" : "fa-brands fa-whatsapp";
+            const iconColor = isDiscord ? "#5865F2" : "#25D366";
+            
+            const sizeKb = (file.size / 1024).toFixed(0);
+
+            pill.innerHTML = `
+                <i class="${iconClass}" style="color: ${iconColor};"></i>
+                <span style="font-weight: 500;">${escapeHtml(file.name)}</span>
+                <span style="color: var(--text-muted); font-size: 0.75rem;">(${sizeKb} KB)</span>
+                <button type="button" title="הסר קובץ זה" style="background: none; border: none; color: #ef4444; font-size: 1rem; cursor: pointer; padding: 0 0 0 4px; line-height: 1;">&times;</button>
+            `;
+
+            pill.querySelector("button").addEventListener("click", () => {
+                removeAccumulatedFile(index);
+            });
+
+            filePills.appendChild(pill);
+        });
+    }
+
+    async function uploadAccumulatedFiles() {
+        renderFileListPills();
+
+        if (accumulatedFiles.length === 0) {
+            parsedChatData = null;
+            document.getElementById("statsWrapper").style.display = "none";
+            document.getElementById("previewCard").style.display = "none";
+            return;
+        }
+
+        const formData = new FormData();
+        accumulatedFiles.forEach(f => formData.append("files", f));
+
+        appendConsoleLog(`[Upload] מעלה ומפענח ${accumulatedFiles.length} קבצי צ'אט מצטברים...`);
 
         try {
             const res = await fetch("/api/upload-chat", {
@@ -558,25 +647,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 parsedChatData = data;
                 renderUploadStats(data);
 
-                // Render file list pills
-                const fileContainer = document.getElementById("fileListContainer");
-                const filePills = document.getElementById("fileListPills");
-                if (fileContainer && filePills) {
-                    fileContainer.style.display = "block";
-                    filePills.innerHTML = "";
-                    (data.filenames || []).forEach(fname => {
-                        const pill = document.createElement("span");
-                        pill.className = "badge";
-                        pill.style.cssText = "background: rgba(255, 255, 255, 0.08); padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.1);";
-                        pill.innerHTML = `<i class="fa-solid fa-file-code"></i> ${escapeHtml(fname)}`;
-                        filePills.appendChild(pill);
-                    });
-                }
-
                 const sourceStr = data.stats.chat_source || "Chat";
-                appendConsoleLog(`[Upload] הקבצים פוענחו ומוזגו בהצלחה! מקור: ${sourceStr}. נמצאו ${data.stats.total_messages} הודעות.`);
+                appendConsoleLog(`[Upload] ${accumulatedFiles.length} קבצים פוענחו ומוזגו בהצלחה! מקור: ${sourceStr}. סה"כ הודעות: ${data.stats.total_messages.toLocaleString()}.`);
             } else {
-                alert("שגיאה בפענוח הקבצים.");
+                alert("שגיאה בפענוח הקבצים: " + (data.detail || "שגיאה כללית"));
             }
         } catch (err) {
             alert("שגיאה בתקשורת עם השרת: " + err);

@@ -44,15 +44,18 @@ Open your browser at: **`http://localhost:8000`**
 
 ### 🟢 1. WhatsApp Chats
 
+#### From WhatsApp Web & WhatsApp Windows App:
+1. Open the chat with your friend.
+2. Click on your friend's **profile name / contact info at the very top** of the chat window.
+3. In the panel that opens on the right side, scroll all the way down and click **Export chat** (ייצא צ'אט).
+4. Select **Without media** (ללא מדיה).
+5. The `.txt` file will be downloaded directly to your PC!
+
 #### From Mobile (iOS / Android):
 1. Open the WhatsApp chat with your friend.
 2. Tap the **3 dots** (Android) or the **contact name at the top** (iOS).
-3. Select **More** → **Export chat**.
-4. Choose **Without Media** (attachments are skipped during training).
-5. Send or save the `.txt` file to your computer.
-
-#### From WhatsApp Web:
-- WhatsApp Web does not have a native "Export Chat" button. Use the **Mobile export** above and send the file to your PC, or use a browser extension that exports WhatsApp Web chat history as `.txt`.
+3. Select **More** → **Export chat** → **Without Media**.
+4. Save or send the `.txt` file to your computer.
 
 ---
 
