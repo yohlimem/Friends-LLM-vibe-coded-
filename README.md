@@ -73,17 +73,7 @@ The recommended tool for exporting Discord chats is the free, open-source **[Dis
 > - **Terms of Service:** Automating user accounts violates Discord's Terms of Service and carries a risk of account termination. Use at your own risk.
 
 #### How to Fetch Your Discord User Token:
-
-- **Method 1: Browser Console (Fastest)**
-  1. Open [discord.com](https://discord.com) in your web browser and log in.
-  2. Press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>I</kbd> (<kbd>⌥</kbd> + <kbd>⌘</kbd> + <kbd>I</kbd> on macOS) to open Developer Tools.
-  3. Go to the **Console** tab, paste the following line, and press <kbd>Enter</kbd>:
-     ```javascript
-     let m;webpackChunkdiscord_app.push([[Math.random()],{},e=>{for(let i in e.c){let x=e.c[i];if(x?.exports?.getToken){m=x;break}}}]);m&&console.log("Token:",m.exports.getToken());
-     ```
-  4. Copy your token from the output.
-
-- **Method 2: Network Monitor (Alternative)**
+- **Network Monitor**
   1. In DevTools, switch to the **Network** tab and refresh the page (<kbd>F5</kbd>).
   2. In the **Filter** box, type `messages` and select any matching request (click a chat if none appear).
   3. Under the **Headers** tab, locate `authorization:` in the request headers and copy its value.
