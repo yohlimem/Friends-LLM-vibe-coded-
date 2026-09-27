@@ -192,6 +192,7 @@ async def upload_chat(
 
 class DatasetBuildRequest(BaseModel):
     target_friend: Any
+    user_names: Optional[Any] = None
     system_prompt: Optional[str] = None
     context_turns: int = 5
     val_split: float = 0.1
@@ -214,6 +215,7 @@ async def create_dataset(req: DatasetBuildRequest):
     dataset_dict = build_chat_dataset(
         messages=current_chat_data["messages"],
         target_friend=req.target_friend,
+        user_names=req.user_names,
         system_prompt=req.system_prompt,
         context_turns=req.context_turns,
         val_split=req.val_split,

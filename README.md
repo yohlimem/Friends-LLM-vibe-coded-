@@ -79,7 +79,10 @@ The easiest and fastest method is using the free, open-source tool **DiscordChat
 ## 🛠️ Step-by-Step Training Workflow
 
 1. **Upload Chats (Tab 1)**: Drag and drop your WhatsApp `.txt` file, Discord `.json` file, or both at once! The app will parse and merge all messages.
-2. **Select Friend & Aliases (Tab 1)**: Choose your friend's name from the dropdown. If their username is different on Discord, add their Discord handle in the **Aliases** field separated by a comma (e.g., `אלון, alon_pro`).
+2. **Assign Participant Roles (Tab 1)**: For each person found in the chats, choose their role:
+   - **🤖 Friend (AI)**: The persona the AI will learn to imitate and speak like (supports multiple aliases/handles across platforms).
+   - **👤 Me (User)**: The conversational partner(s) whose questions and messages the AI learns to respond to.
+   - **⚪ Ignore**: Non-relevant or third-party participants whose messages will be filtered out.
 3. **Configure Dataset (Tab 2)**: Customize the system prompt and session gap settings, then click **Generate Dataset**.
 4. **Train Model (Tab 3)**: Select your base model (recommended: `Qwen/Qwen2.5-7B-Instruct`) and start fine-tuning with live Loss tracking.
 5. **Chat with Persona (Tab 4)**: Chat with your AI friend directly inside the app!
