@@ -48,7 +48,7 @@ Open your browser at: **`http://localhost:8000`**
 1. Open the chat with your friend.
 2. Click on your friend's **profile name / contact info at the very top** of the chat window.
 3. In the panel that opens on the right side, scroll all the way down and click **Export chat** (ייצא צ'אט).
-4. Select **Without media** (ללא מדיה).
+4. Download the range that you think is most representative of your friend
 5. The `.txt` file will be downloaded directly to your PC!
 
 #### From Mobile (iOS / Android):
