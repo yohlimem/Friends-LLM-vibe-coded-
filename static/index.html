@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Persona AI Fine-Tuner | RTX 4080 Super</title>
+
+    <!-- Google Fonts: Rubik (Hebrew), Inter, Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800&family=Rubik:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- FontAwesome & Chart.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top Navbar -->
+        <header class="navbar">
+            <div class="brand">
+                <div class="brand-logo" style="display: flex; gap: 6px; align-items: center;">
+                    <i class="fa-brands fa-whatsapp"></i>
+                    <i class="fa-brands fa-discord" style="color: #5865F2;"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>Persona <span>AI Studio</span></h1>
+                    <p>WhatsApp & Discord Chat LLM Fine-Tuner</p>
+                </div>
+            </div>
+
+            <!-- Hardware GPU Status Badge -->
+            <div class="gpu-badge" id="gpuStatusBadge">
+                <div class="gpu-icon"><i class="fa-solid fa-microchip"></i></div>
+                <div class="gpu-info">
+                    <span class="gpu-name" id="gpuNameDisplay">NVIDIA RTX 4080 Super</span>
+                    <div class="gpu-mem-bar">
+                        <div class="gpu-mem-fill" id="gpuMemFill" style="width: 0%;"></div>
+                    </div>
+                    <span class="gpu-val" id="gpuMemText">0.0 / 16.0 GB VRAM</span>
+                </div>
+                <div class="status-dot online" id="gpuStatusDot"></div>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="nav-tabs">
+            <button class="nav-tab active" data-tab="uploadTab">
+                <i class="fa-solid fa-file-arrow-up"></i>
+                <span>1. העלאת צ'אט</span>
+            </button>
+
+            <button class="nav-tab" data-tab="datasetTab">
+                <i class="fa-solid fa-sliders"></i>
+                <span>2. הגדרת דאטהסט</span>
+            </button>
+
+            <button class="nav-tab" data-tab="trainTab">
+                <i class="fa-solid fa-brain"></i>
+                <span>3. אימון המודל (GPU)</span>
+            </button>
+
+            <button class="nav-tab" data-tab="chatTab">
+                <i class="fa-solid fa-comments"></i>
+                <span>4. צ'אט עם החבר</span>
+            </button>
+
+            <button class="nav-tab" data-tab="exportTab">
+                <i class="fa-solid fa-boxes-stacked"></i>
+                <span>5. מודלים וייצוא/ייבוא</span>
+            </button>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- TAB 1: UPLOAD & PARSE -->
+            <section class="tab-content active" id="uploadTab">
+                <div class="card grid-split">
+                    <div class="upload-zone-wrapper">
+                        <h2><i class="fa-solid fa-cloud-arrow-up"></i> העלאת קבצי צ'אט (WhatsApp & Discord)</h2>
+                        <p class="subtitle">תוכל לבחור ולהעלות מספר קבצי צ'אט במקביל (גם <code>.txt</code> של WhatsApp וגם <code>.json</code>/<code>.txt</code> של Discord) - המערכת תמזג את כל השיחות!</p>
+                        
+                        <div class="drop-zone" id="dropZone">
+                            <i class="fa-solid fa-file-lines drop-icon"></i>
+                            <p class="drop-text">גרוב והשלך לכאן קבצי <code>.txt</code> ו-<code>.json</code> של WhatsApp ו-Discord</p>
+                            <span class="or-divider">או</span>
+                            <label for="chatFileInput" class="btn primary-btn">
+                                <i class="fa-solid fa-folder-open"></i> בחר קבצים מהמחשב
+                            </label>
+                            <input type="file" id="chatFileInput" accept=".txt,.json,.zip" multiple hidden>
+                        </div>
+
+                        <!-- Uploaded Files List Pill -->
+                        <div id="fileListContainer" class="margin-top" style="display: none;">
+                            <small class="help-text"><strong>קבצים שטענת בדיאלוג:</strong></small>
+                            <div id="fileListPills" style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Participant & Stats Summary -->
+                    <div class="stats-wrapper" id="statsWrapper" style="display: none;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <h2><i class="fa-solid fa-chart-pie"></i> ניתוח הנתונים המשולב</h2>
+                            <span class="badge" id="statSourceBadge" style="background: rgba(139, 92, 246, 0.2); color: var(--accent-purple); padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 0.85rem;"><i class="fa-solid fa-comments"></i> WhatsApp & Discord</span>
+                        </div>
+                        
+                        <div class="form-group margin-bottom">
+                            <label for="targetFriendSelect"><strong><i class="fa-solid fa-user-check"></i> בחר את השם הראשי של החבר:</strong></label>
+                            <select id="targetFriendSelect" class="form-control select-lg"></select>
+                        </div>
+
+                        <div class="form-group margin-bottom">
+                            <label for="targetAliasesInput"><strong><i class="fa-solid fa-users-gear"></i> כינויים נוספים בפלטפורמות שונות (מופרדים בפסיק):</strong></label>
+                            <input type="text" id="targetAliasesInput" class="form-control" placeholder="למשל: אלון, alon_pro, alon#0001">
+                            <small class="help-text">אם לחבר יש שם שונה בוואטסאפ ובדיסקורד, רשום כאן את הניקים שלו והמערכת תאסוף את הודעותיו מכל הפלטפורמות!</small>
+                        </div>
+
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon purple"><i class="fa-solid fa-message"></i></div>
+                                <div class="stat-data">
+                                    <span class="stat-value" id="statTotalMsgs">0</span>
+                                    <span class="stat-label">סה"כ הודעות</span>
+                                </div>
+                            </div>
+
+                            <div class="stat-card">
+                                <div class="stat-icon cyan"><i class="fa-solid fa-language"></i></div>
+                                <div class="stat-data">
+                                    <span class="stat-value" id="statHebrewRatio">0%</span>
+                                    <span class="stat-label">הודעות בעברית</span>
+                                </div>
+                            </div>
+
+                            <div class="stat-card">
+                                <div class="stat-icon blue"><i class="fa-solid fa-font"></i></div>
+                                <div class="stat-data">
+                                    <span class="stat-value" id="statEnglishRatio">0%</span>
+                                    <span class="stat-label">הודעות באנגלית</span>
+                                </div>
+                            </div>
+
+                            <div class="stat-card">
+                                <div class="stat-icon orange"><i class="fa-solid fa-photo-film"></i></div>
+                                <div class="stat-data">
+                                    <span class="stat-value" id="statMediaCount">0</span>
+                                    <span class="stat-label">מדיה/קישורים שהוסרו</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="action-row margin-top">
+                            <button class="btn accent-btn full-width" id="btnGoToDataset">
+                                המשך להגדרת הדאטהסט <i class="fa-solid fa-arrow-left"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Preview Box -->
+                <div class="card margin-top" id="previewCard" style="display: none;">
+                    <h3><i class="fa-solid fa-eye"></i> תצוגה מקדימה של השיחה שנפלטה</h3>
+                    <div class="chat-preview-list" id="chatPreviewList"></div>
+                </div>
+            </section>
+
+            <!-- TAB 2: DATASET SETUP -->
+            <section class="tab-content" id="datasetTab">
+                <div class="card grid-2col">
+                    <div class="config-panel">
+                        <h2><i class="fa-solid fa-sliders"></i> יצירת דאטהסט הדרכה (Dataset)</h2>
+                        <p class="subtitle">הגדר את פקודת המערכת (System Prompt) ועומק ההקשר של הדיאלוגים.</p>
+
+                        <div class="form-group">
+                            <label for="systemPromptInput"><strong>System Prompt (הנחיה למודל ה-AI):</strong></label>
+                            <textarea id="systemPromptInput" rows="5" class="form-control" dir="rtl"></textarea>
+                            
+                            <!-- Prompt Templates Bar -->
+                            <div class="prompt-templates-bar">
+                                <span><i class="fa-solid fa-bolt"></i> תבניות מהירות:</span>
+                                <button type="button" class="btn-tag" id="btnTplSarcastic">🎭 סרקסטי ומצחיק</button>
+                                <button type="button" class="btn-tag" id="btnTplGamer">🎮 גיימר (Heb/Eng)</button>
+                                <button type="button" class="btn-tag" id="btnTplCasual">💬 יומיומי וקצר</button>
+                                <button type="button" class="btn-tag" id="btnTplDirect">⚡ תכליתי וחד</button>
+                            </div>
+                        </div>
+
+                        <!-- Prompt Writing Guide Advice Box -->
+                        <div class="prompt-guide-box card margin-bottom">
+                            <h4><i class="fa-solid fa-lightbulb"></i> איך לכתוב System Prompt מנצח לפרסונה?</h4>
+                            <ul>
+                                <li><strong>1. הגדרת זהות וטון:</strong> רשום במפורש מי הדמות ("אתה עונה ומדבר בדיוק כמו אלון").</li>
+                                <li><strong>2. סלנג ומילות מפתח:</strong> ציין ביטויים שהחבר אוהב ("וואלה", "bro", "חחחח", "legit", "סגור אחי").</li>
+                                <li><strong>3. שילוב עברית ואנגלית:</strong> הנחה את ה-AI לשלב מילים באנגלית ובעברית בדיוק במינון שמופיע בשיחה.</li>
+                                <li><strong>4. סגנון הקלדה:</strong> ציין אם לחבר יש מנהג לענות בקצר, להשתמש בהרבה אימוג'ים או באותיות כפולות.</li>
+                            </ul>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="sessionGapInput"><strong><i class="fa-solid fa-clock-rotate-left"></i> זיהוי גבולות שיחה - פער זמן (Session Time Gap):</strong> <span id="sessionGapVal">60</span> דקות</label>
+                            <input type="range" id="sessionGapInput" min="15" max="240" step="15" value="60" class="slider">
+                            <small class="help-text">הפרש זמן מעל סף זה מזהה תחילת שיחה חדשה ומונע זליגת הקשר בין ימים או הפסקות ארוכות.</small>
+                        </div>
+
+                        <div class="form-group margin-bottom">
+                            <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="includeFullSessionsCheck" checked style="width: 16px; height: 16px; accent-color: var(--accent-purple);">
+                                <span><strong>הכלל רצפי שיחות מלאות (Full Sessions)</strong> - למידת התחלות וסיומות טבעיות של שיחה.</span>
+                            </label>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="contextTurnsInput"><strong>עומק ההקשר בדיאלוג (Context Turns):</strong> <span id="contextTurnsVal">5</span> הודעות קודמות</label>
+                            <input type="range" id="contextTurnsInput" min="1" max="15" value="5" class="slider">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="valSplitInput"><strong>אחוז נתוני בחינה (Validation Split):</strong> <span id="valSplitVal">10</span>%</label>
+                            <input type="range" id="valSplitInput" min="5" max="30" value="10" class="slider">
+                        </div>
+
+                        <button class="btn primary-btn large-btn" id="btnBuildDataset">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> צור דאטהסט JSONL מתוחם שיחות
+                        </button>
+                    </div>
+
+                    <!-- Dataset Preview -->
+                    <div class="preview-panel">
+                        <h2><i class="fa-solid fa-code"></i> תצוגת דוגמאות מתוך הדאטהסט</h2>
+                        <div class="dataset-stats-badge" id="datasetStatsBadge" style="display: none; flex-wrap: wrap; gap: 10px;">
+                            <span>שיחות שזוהו: <strong id="dsTotalSessions">0</strong></span>
+                            <span>ממוצע לשיחה: <strong id="dsAvgSessionLen">0</strong></span>
+                            <span>סה"כ דוגמאות: <strong id="dsTotalSamples">0</strong></span>
+                            <span>אימון: <strong id="dsTrainSamples">0</strong></span>
+                            <span>בדיקה: <strong id="dsValSamples">0</strong></span>
+                        </div>
+                        <pre class="json-code-box" id="jsonPreviewBox">// לחץ על "צור דאטהסט" כדי לצפות בדוגמאות הפרסונה בפורמט JSONL...</pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: TRAINING STUDIO -->
+            <section class="tab-content" id="trainTab">
+                <div class="card grid-2col">
+                    <!-- Training Controls -->
+                    <div class="trainer-config">
+                        <h2><i class="fa-solid fa-microchip"></i> הגדרות אימון QLoRA (RTX 4080 Super)</h2>
+
+                        <div class="form-group mode-selector-box margin-bottom">
+                            <label><strong><i class="fa-solid fa-graduation-cap"></i> מצב אימון (Training Mode):</strong></label>
+                            <div class="mode-toggle-group">
+                                <label class="mode-option active" id="modeOptionNew">
+                                    <input type="radio" name="trainMode" value="new" checked hidden>
+                                    <div class="mode-content">
+                                        <i class="fa-solid fa-sparkles"></i>
+                                        <span>אימון חדש מאפס (Base Model)</span>
+                                    </div>
+                                </label>
+                                <label class="mode-option" id="modeOptionContinue">
+                                    <input type="radio" name="trainMode" value="continue" hidden>
+                                    <div class="mode-content">
+                                        <i class="fa-solid fa-forward-fast"></i>
+                                        <span>המשך אימון למודל קיים (Incremental Fine-Tuning)</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group preset-select-box margin-bottom" id="resumePresetGroup" style="display: none;">
+                            <label for="resumePresetSelect"><strong><i class="fa-solid fa-robot"></i> בחר מודל קיים להמשך אימון:</strong></label>
+                            <select id="resumePresetSelect" class="form-control select-lg"></select>
+                            <small class="help-text">האימון יימשך מתוך המשקולות שנלמדו במודל זה וישפר אותו עוד יותר!</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="personaNameInput"><strong>שם לפרסונה המאומנת (Model Preset Name):</strong></label>
+                            <input type="text" id="personaNameInput" class="form-control" value="אלון AI" placeholder="למשל: אלון AI, דניאל AI">
+                            <small class="help-text">שם זה יישמר ברשימת ה-Presets של המודלים שלך.</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="baseModelSelect"><strong>מודל בסיס (Base Model):</strong></label>
+                            <select id="baseModelSelect" class="form-control">
+                                <option value="Qwen/Qwen2.5-7B-Instruct" selected>Qwen 2.5 7B Instruct (מומלץ ביותר לעברית + אנגלית)</option>
+                                <option value="Qwen/Qwen2.5-3B-Instruct">Qwen 2.5 3B Instruct (מהיר מאוד / תופס מעט זיכרון)</option>
+                                <option value="meta-llama/Meta-Llama-3.1-8B-Instruct">LLaMA 3.1 8B Instruct</option>
+                            </select>
+                        </div>
+
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label for="epochsInput">אפוכים (Epochs):</label>
+                                <input type="number" id="epochsInput" value="3" min="1" max="10" class="form-control">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="lrInput">קצב למידה (Learning Rate):</label>
+                                <input type="text" id="lrInput" value="0.0002" class="form-control">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="loraRankInput">LoRA Rank (r):</label>
+                                <input type="number" id="loraRankInput" value="16" class="form-control">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="batchSizeInput">Batch Size:</label>
+                                <input type="number" id="batchSizeInput" value="2" min="1" max="8" class="form-control">
+                            </div>
+                        </div>
+
+                        <div class="training-action-box margin-top">
+                            <button class="btn pulse-glow-btn full-width" id="btnStartTraining">
+                                <i class="fa-solid fa-play"></i> התחל אימון בלייב על ה-4080 Super
+                            </button>
+                            <button class="btn danger-btn full-width margin-top" id="btnStopTraining" style="display: none;">
+                                <i class="fa-solid fa-stop"></i> עצור אימון
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Training Progress & Live Loss Graph -->
+                    <div class="trainer-monitor">
+                        <h2><i class="fa-solid fa-chart-line"></i> גרף Loss והתקדמות אימון</h2>
+                        
+                        <div class="progress-bar-container">
+                            <div class="progress-bar-fill" id="trainingProgressBar" style="width: 0%;"></div>
+                            <span class="progress-text" id="trainingProgressText">0%</span>
+                        </div>
+
+                        <div class="metrics-row">
+                            <div class="metric-pill">Epoch: <strong id="metricEpoch">0 / 3</strong></div>
+                            <div class="metric-pill">Step: <strong id="metricStep">0 / 0</strong></div>
+                            <div class="metric-pill">Loss: <strong id="metricLoss">N/A</strong></div>
+                            <div class="metric-pill">VRAM: <strong id="metricVram">0 GB</strong></div>
+                        </div>
+
+                        <div class="chart-box">
+                            <canvas id="lossChart"></canvas>
+                        </div>
+
+                        <!-- Live Logs Console -->
+                        <div class="console-box" id="consoleBox">
+                            <div class="console-header"><i class="fa-solid fa-terminal"></i> לוגים בזמן אמת</div>
+                            <div class="console-body" id="consoleBody">
+                                <p class="log-line info">[System] השרת מוכן לאימון. לחץ על "התחל אימון".</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: PERSONA CHAT -->
+            <section class="tab-content" id="chatTab">
+                <div class="chat-app-container card">
+                    <div class="chat-sidebar">
+                        <div class="friend-profile">
+                            <div class="avatar-circle" id="friendAvatar">AI</div>
+                            <div class="friend-details">
+                                <h3 id="friendNameDisplay">בחר פרסונה</h3>
+                                <span class="status-online" id="chatStatusText"><i class="fa-solid fa-circle"></i> מחובר (RTX 4080 Super)</span>
+                            </div>
+                        </div>
+
+                        <!-- Active Model Preset Dropdown -->
+                        <div class="form-group preset-select-box">
+                            <label for="activePresetSelect"><strong><i class="fa-solid fa-user-gear"></i> החלף פרסונה / מודל:</strong></label>
+                            <select id="activePresetSelect" class="form-control select-lg"></select>
+                            <button class="btn primary-btn full-width margin-top" id="btnSwitchPreset">
+                                <i class="fa-solid fa-rotate-right"></i> טען פרסונה זו ל-GPU
+                            </button>
+                        </div>
+
+                        <div class="chat-controls">
+                            <h4><i class="fa-solid fa-gears"></i> פרמטרים והנחיית צ'אט (System Prompt)</h4>
+
+                            <div class="form-group margin-bottom">
+                                <label for="chatSystemPromptInput"><strong>System Prompt לפרסונה הטעונה בצ'אט:</strong></label>
+                                <textarea id="chatSystemPromptInput" rows="4" class="form-control" placeholder="הכנס הנחיה ייחודית לפרסונה זו בזמן צ'אט..." dir="rtl"></textarea>
+                                <div class="prompt-templates-bar margin-top">
+                                    <button type="button" class="btn-tag" id="btnChatTplFunny">🎭 הומוריסטי</button>
+                                    <button type="button" class="btn-tag" id="btnChatTplShort">💬 תשובות קצרות</button>
+                                    <button type="button" class="btnChatTplEng btn-tag" id="btnChatTplEng">🇬🇧 Heb+Eng</button>
+                                </div>
+                                <button class="btn accent-btn full-width margin-top" id="btnSaveChatPrompt">
+                                    <i class="fa-solid fa-floppy-disk"></i> שמור System Prompt לפרסונה זו
+                                </button>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="tempInput">טמפרטורה (Temperature): <span id="tempVal">0.7</span></label>
+                                <input type="range" id="tempInput" min="0.1" max="1.5" step="0.1" value="0.7" class="slider">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="topPInput">Top-P: <span id="topPVal">0.9</span></label>
+                                <input type="range" id="topPInput" min="0.1" max="1.0" step="0.05" value="0.9" class="slider">
+                            </div>
+
+                            <button class="btn outline-btn full-width margin-top" id="btnClearChat">
+                                <i class="fa-solid fa-trash"></i> נקה שיחה
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="chat-main">
+                        <div class="chat-messages-container" id="chatMessagesContainer">
+                            <div class="chat-bubble assistant">
+                                <div class="bubble-sender">החבר AI</div>
+                                <div class="bubble-text">אהלן! בחר פרסונה מהרשימה בצד וטען אותה ל-GPU כדי להתחיל לשוחח!</div>
+                            </div>
+                        </div>
+
+                        <div class="chat-input-bar">
+                            <textarea id="chatInput" placeholder="רשום הודעה לחבר שלך בעברית או באנגלית..." rows="1" dir="auto"></textarea>
+                            <button id="btnSendMessage" class="btn send-btn"><i class="fa-solid fa-paper-plane"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 5: MODEL PRESETS, EXPORT & IMPORT MANAGER -->
+            <section class="tab-content" id="exportTab">
+                <div class="card margin-bottom">
+                    <h2><i class="fa-solid fa-boxes-stacked"></i> ניהול Presets של מודלים (Model Presets Manager)</h2>
+                    <p class="subtitle">עבור בין מודלים שאימנת, ייצא את משקולות המודל לקובץ <code>.zip</code>, או ייבא מודל מאומן מתוך המחשב.</p>
+
+                    <!-- Presets List Grid -->
+                    <div class="presets-grid" id="presetsGrid">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                </div>
+
+                <!-- Import Model ZIP Card -->
+                <div class="card grid-2col margin-top">
+                    <div class="import-box-wrapper">
+                        <h2><i class="fa-solid fa-file-import"></i> ייבוא מודל מאומן (Import Model Zip)</h2>
+                        <p class="subtitle">העלה קובץ <code>.zip</code> המכיל משקולות LoRA מאומנות ותן לו שם.</p>
+
+                        <div class="form-group margin-bottom">
+                            <label for="importPresetNameInput"><strong>שם לפרסונה המיובאת:</strong></label>
+                            <input type="text" id="importPresetNameInput" class="form-control" placeholder="למשל: דניאל AI, Sarah AI">
+                        </div>
+
+                        <div class="drop-zone" id="importZipDropZone">
+                            <i class="fa-solid fa-file-zipper drop-icon"></i>
+                            <p class="drop-text">גרוב והשלך לכאן קובץ <code>.zip</code> של המודל המאומן</p>
+                            <span class="or-divider">או</span>
+                            <label for="importZipFileInput" class="btn primary-btn">
+                                <i class="fa-solid fa-folder-open"></i> בחר קובץ ZIP
+                            </label>
+                            <input type="file" id="importZipFileInput" accept=".zip" hidden>
+                        </div>
+
+                        <button class="btn accent-btn full-width margin-top" id="btnSubmitImport">
+                            <i class="fa-solid fa-upload"></i> ייבא מודל והוסף ל-Presets
+                        </button>
+                    </div>
+
+                    <!-- Ollama / Deployment Guide -->
+                    <div class="export-guide">
+                        <h2><i class="fa-solid fa-terminal"></i> הרצה ב-Ollama / תוכנות חיצוניות</h2>
+                        <p>כדי להריץ מודל שייצאת ב-Ollama, צור קובץ <code>Modelfile</code>:</p>
+                        <pre class="json-code-box">FROM qwen2.5:7b
+ADAPTER ./trained_persona/alon_ai
+SYSTEM "You are now responding and speaking exactly like Alon. Use the same speaking style, vocabulary, slang, and language mixing (Hebrew/English) exactly as it appeared in the WhatsApp chats."</pre>
+                        <p>ואז הרץ במסוף:</p>
+                        <code class="code-badge">ollama create friend_ai -f Modelfile</code>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Rename Modal -->
+    <div class="modal-overlay" id="renameModal">
+        <div class="modal-card">
+            <div class="modal-title">
+                <i class="fa-solid fa-pen-to-square"></i> שינוי שם לפרסונה
+            </div>
+            <p class="subtitle">הכנס שם חדש עבור המודל המאומן:</p>
+            <div class="form-group">
+                <input type="text" id="renameModalInput" class="form-control" placeholder="שם חדש...">
+            </div>
+            <div class="modal-actions">
+                <button class="btn outline-btn" id="btnCancelRename">ביטול</button>
+                <button class="btn primary-btn" id="btnConfirmRename"><i class="fa-solid fa-check"></i> שמור שם</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom JS -->
+    <script src="/static/app.js"></script>
+</body>
+</html>
