@@ -240,9 +240,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function submitRename() {
         if (!pendingRenamePresetId) return;
-        const newName = document.getElementById("renameModalInput").value.trim();
+        const input = document.getElementById("renameModalInput");
+        const newName = input.value.trim();
+        const btnConfirm = document.getElementById("btnConfirmRename");
         if (!newName) {
-            alert("אנא הכנס שם תקין לפרסונה.");
+            flashUiError(input);
+            triggerButtonFeedback(btnConfirm, false, `<i class="fa-solid fa-triangle-exclamation"></i> הכנס שם תקין`, 2000);
             return;
         }
 
@@ -261,12 +264,14 @@ document.addEventListener("DOMContentLoaded", () => {
                     document.getElementById("friendNameDisplay").textContent = newName;
                 }
                 await loadPresets();
+                const presetsGrid = document.getElementById("presetsGrid");
+                if (presetsGrid) flashUiSuccess(presetsGrid);
                 appendConsoleLog(`[Preset] השם שונה בהצלחה ל: '${newName}'.`);
             } else {
-                alert("שגיאה בשינוי השם: " + (data.detail || "Unknown error"));
+                appendConsoleLog(`[Preset Error] שגיאה בשינוי השם: ${data.detail || "Unknown error"}`);
             }
         } catch (err) {
-            alert("שגיאה בתקשורת: " + err);
+            appendConsoleLog(`[Network Error] שגיאה בתקשורת: ${err}`);
         }
     }
 
@@ -294,6 +299,7 @@ document.addEventListener("DOMContentLoaded", () => {
         appendConsoleLog(`[Preset] מעביר מודל פעיל ל: ${preset.name}...`);
         const btnLoad = document.getElementById("btnSwitchPreset");
         btnLoad.disabled = true;
+        btnLoad.classList.add("btn-loading-state");
         btnLoad.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> טוען ${preset.name}...`;
 
         try {
@@ -322,12 +328,18 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             renderChatHistory(preset.name, chatHistoriesByPreset[presetId]);
 
-            alert(`המודל '${preset.name}' נטען בהצלחה ל-GPU!`);
+            const gpuBadge = document.querySelector(".gpu-badge");
+            if (gpuBadge) flashUiCyan(gpuBadge);
+
+            btnLoad.classList.remove("btn-loading-state");
+            triggerButtonFeedback(btnLoad, true, `<i class="fa-solid fa-check"></i> נטען בהצלחה ל-GPU!`, 3000);
+            appendConsoleLog(`[Preset] המודל '${preset.name}' נטען בהצלחה ל-GPU ומוכן לשיחה.`);
         } catch (err) {
-            alert("שגיאה שטעינת המודל: " + err);
+            btnLoad.classList.remove("btn-loading-state");
+            triggerButtonFeedback(btnLoad, false, `<i class="fa-solid fa-triangle-exclamation"></i> שגיאה בטעינת המודל`, 3000);
+            appendConsoleLog(`[Preset Error] שגיאה בטעינת המודל: ${err}`);
         } finally {
             btnLoad.disabled = false;
-            btnLoad.innerHTML = `<i class="fa-solid fa-rotate-right"></i> טען פרסונה זו ל-GPU`;
         }
     }
 
@@ -366,12 +378,13 @@ document.addEventListener("DOMContentLoaded", () => {
             document.body.removeChild(a);
 
             appendConsoleLog(`[Export] הקובץ ${presetId}_lora_weights.zip יורד כעת!`);
+            if (btnEl) triggerButtonFeedback(btnEl, true, `<i class="fa-solid fa-check"></i> יורד...`, 2500);
         } catch (err) {
-            alert("שגיאה בהורדת קובץ ZIP: " + err.message);
+            if (btnEl) triggerButtonFeedback(btnEl, false, `<i class="fa-solid fa-triangle-exclamation"></i> שגיאה`, 2500);
+            appendConsoleLog(`[Export Error] שגיאה בהורדת קובץ ZIP: ${err.message}`);
         } finally {
             if (btnEl) {
                 btnEl.disabled = false;
-                btnEl.innerHTML = originalHtml;
             }
         }
     }
@@ -384,10 +397,14 @@ document.addEventListener("DOMContentLoaded", () => {
             if (res.ok) {
                 if (activePresetId === presetId) activePresetId = null;
                 await loadPresets();
+                const presetsGrid = document.getElementById("presetsGrid");
+                if (presetsGrid) flashUiSuccess(presetsGrid);
                 appendConsoleLog(`[Preset] ה-Preset '${presetId}' נמחק בהצלחה.`);
+            } else {
+                appendConsoleLog(`[Preset Error] שגיאה במחיקת ה-Preset.`);
             }
         } catch (err) {
-            alert("שגיאה במחיקת ה-Preset: " + err);
+            appendConsoleLog(`[Preset Error] שגיאה במחיקת ה-Preset: ${err}`);
         }
     }
 
@@ -396,15 +413,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnSubmitImport = document.getElementById("btnSubmitImport");
 
     btnSubmitImport.addEventListener("click", async () => {
-        const name = document.getElementById("importPresetNameInput").value.trim();
+        const nameInput = document.getElementById("importPresetNameInput");
+        const name = nameInput.value.trim();
         const files = importZipFileInput.files;
 
         if (!name) {
-            alert("אנא הכנס שם לפרסונה המיובאת.");
+            flashUiError(nameInput);
+            triggerButtonFeedback(btnSubmitImport, false, `<i class="fa-solid fa-triangle-exclamation"></i> הכנס שם לפרסונה`, 2500);
             return;
         }
         if (!files || files.length === 0) {
-            alert("אנא בחר קובץ .zip של משקולות המודל.");
+            flashUiError(importZipFileInput);
+            triggerButtonFeedback(btnSubmitImport, false, `<i class="fa-solid fa-triangle-exclamation"></i> בחר קובץ ZIP`, 2500);
             return;
         }
 
@@ -413,6 +433,7 @@ document.addEventListener("DOMContentLoaded", () => {
         formData.append("file", files[0]);
 
         btnSubmitImport.disabled = true;
+        btnSubmitImport.classList.add("btn-loading-state");
         btnSubmitImport.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> מייבא מודל...`;
 
         try {
@@ -423,44 +444,26 @@ document.addEventListener("DOMContentLoaded", () => {
             const data = await res.json();
 
             if (data.status === "success") {
-                alert(data.message);
-                document.getElementById("importPresetNameInput").value = "";
+                const importCard = btnSubmitImport.closest(".card");
+                if (importCard) flashUiSuccess(importCard);
+                nameInput.value = "";
                 importZipFileInput.value = "";
                 await loadPresets();
+                btnSubmitImport.classList.remove("btn-loading-state");
+                triggerButtonFeedback(btnSubmitImport, true, `<i class="fa-solid fa-check"></i> יובא בהצלחה!`, 3500);
+                appendConsoleLog(`[Import] המודל '${name}' יובא בהצלחה.`);
             } else {
-                alert("שגיאה בייבוא המודל: " + (data.detail || "Unknown error"));
+                btnSubmitImport.classList.remove("btn-loading-state");
+                triggerButtonFeedback(btnSubmitImport, false, `<i class="fa-solid fa-triangle-exclamation"></i> שגיאה בייבוא`, 3000);
+                appendConsoleLog(`[Import Error] שגיאה בייבוא המודל: ${data.detail || "Unknown error"}`);
             }
         } catch (err) {
-            alert("שגיאה בתקשורת: " + err);
+            btnSubmitImport.classList.remove("btn-loading-state");
+            triggerButtonFeedback(btnSubmitImport, false, `<i class="fa-solid fa-triangle-exclamation"></i> שגיאה בתקשורת`, 3000);
+            appendConsoleLog(`[Network Error] שגיאה בתקשורת: ${err}`);
         } finally {
             btnSubmitImport.disabled = false;
-            btnSubmitImport.innerHTML = `<i class="fa-solid fa-upload"></i> ייבא מודל והוסף ל-Presets`;
         }
-    });
-
-    // --- PROMPT TEMPLATES QUICK BUTTONS ---
-    document.getElementById("btnTplSarcastic").addEventListener("click", () => {
-        const targetName = document.getElementById("targetFriendSelect").value || "החבר שלי";
-        document.getElementById("systemPromptInput").value = 
-            `אתה עכשיו עונה ומדבר בדיוק כמו ${targetName}. סגנון הדיבור שלך סרקסטי, ציני, מצחיק ומלא בסלנג ('חחחח', 'וואלה', 'נו באמת'). אתה תמיד מגיב בבדיחה קלה או עקיצה ידידותית לפני שאתה עונה!`;
-    });
-
-    document.getElementById("btnTplGamer").addEventListener("click", () => {
-        const targetName = document.getElementById("targetFriendSelect").value || "החבר שלי";
-        document.getElementById("systemPromptInput").value = 
-            `אתה עכשיו עונה ומדבר בדיוק כמו ${targetName}. אתה משלב אנגלית ועברית באופן חופשי וטבעי ('bro', 'insane', 'legit', 'GG', 'סגור אחי'). אתה מדבר על משחקים, ספורט ויציאות.`;
-    });
-
-    document.getElementById("btnTplCasual").addEventListener("click", () => {
-        const targetName = document.getElementById("targetFriendSelect").value || "החבר שלי";
-        document.getElementById("systemPromptInput").value = 
-            `אתה עכשיו עונה ומדבר בדיוק כמו ${targetName}. ענה בתשובות קצרות, יומיומיות ותכליתיות בדיוק כפי שתתכתב בוואטסאפ. השתמש באימוג'ים במידה טבעית.`;
-    });
-
-    document.getElementById("btnTplDirect").addEventListener("click", () => {
-        const targetName = document.getElementById("targetFriendSelect").value || "החבר שלי";
-        document.getElementById("systemPromptInput").value = 
-            `אתה AI clone של ${targetName}. ענה ישירות, בצורה חדה וממוקדת, ללא הקדמות מיותרות.`;
     });
 
     // --- SAVE CHAT SYSTEM PROMPT FOR ACTIVE PRESET ---
@@ -468,10 +471,17 @@ document.addEventListener("DOMContentLoaded", () => {
     if (btnSaveChatPrompt) {
         btnSaveChatPrompt.addEventListener("click", async () => {
             if (!activePresetId) {
-                alert("אנא בחר וטען פרסונה מתוך הרשימה תחילה.");
+                const selectEl = document.getElementById("activePresetSelect");
+                if (selectEl) flashUiError(selectEl);
+                triggerButtonFeedback(btnSaveChatPrompt, false, `<i class="fa-solid fa-triangle-exclamation"></i> בחר מודל תחילה`, 2500);
                 return;
             }
-            const promptVal = document.getElementById("chatSystemPromptInput").value;
+            const promptInput = document.getElementById("chatSystemPromptInput");
+            const promptVal = promptInput.value;
+            btnSaveChatPrompt.disabled = true;
+            btnSaveChatPrompt.classList.add("btn-loading-state");
+            btnSaveChatPrompt.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> שומר...`;
+
             try {
                 const res = await fetch("/api/update-preset-prompt", {
                     method: "POST",
@@ -481,31 +491,22 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (res.ok) {
                     const preset = loadedPresets.find(p => p.id === activePresetId);
                     if (preset) preset.system_prompt = promptVal;
-                    alert("ה-System Prompt של הפרסונה נשמר בהצלחה!");
+                    flashUiSuccess(promptInput);
+                    btnSaveChatPrompt.classList.remove("btn-loading-state");
+                    triggerButtonFeedback(btnSaveChatPrompt, true, `<i class="fa-solid fa-check"></i> נשמר בהצלחה!`, 2500);
+                    appendConsoleLog(`[Preset] ה-System Prompt של '${preset.name}' נשמר בהצלחה.`);
+                } else {
+                    btnSaveChatPrompt.classList.remove("btn-loading-state");
+                    triggerButtonFeedback(btnSaveChatPrompt, false, `<i class="fa-solid fa-triangle-exclamation"></i> שגיאה בשמירה`, 2500);
                 }
             } catch (err) {
-                alert("שגיאה בשמירת ה-System Prompt: " + err);
+                btnSaveChatPrompt.classList.remove("btn-loading-state");
+                triggerButtonFeedback(btnSaveChatPrompt, false, `<i class="fa-solid fa-triangle-exclamation"></i> שגיאה בתקשורת`, 2500);
+            } finally {
+                btnSaveChatPrompt.disabled = false;
             }
         });
     }
-
-    document.getElementById("btnChatTplFunny").addEventListener("click", () => {
-        const friendName = document.getElementById("friendNameDisplay").textContent || "החבר";
-        document.getElementById("chatSystemPromptInput").value = 
-            `אתה עכשיו עונה בדיוק כמו ${friendName}. תהיה מצחיק, סרקסטי, תשתמש בסלנג שוטף ותענה בציניות חיובית!`;
-    });
-
-    document.getElementById("btnChatTplShort").addEventListener("click", () => {
-        const friendName = document.getElementById("friendNameDisplay").textContent || "החבר";
-        document.getElementById("chatSystemPromptInput").value = 
-            `אתה עכשיו עונה בדיוק כמו ${friendName}. ענה בתשובות קצרות וקולעות ביותר, בדיוק כמו בהודעות וואטסאפ מהירות.`;
-    });
-
-    document.getElementById("btnChatTplEng").addEventListener("click", () => {
-        const friendName = document.getElementById("friendNameDisplay").textContent || "החבר";
-        document.getElementById("chatSystemPromptInput").value = 
-            `You are an AI clone of ${friendName}. Mix Hebrew and English naturally ('bro', 'insane', 'סגור אחי', 'legit'). Speak casually.`;
-    });
 
     // --- FILE UPLOAD & PARSING (ACCUMULATING MULTI-FILE QUEUE) ---
     const dropZone = document.getElementById("dropZone");
@@ -543,9 +544,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     if (btnClearFiles) {
-        btnClearFiles.addEventListener("click", () => {
+        btnClearFiles.addEventListener("click", (e) => {
             accumulatedFiles = [];
             uploadAccumulatedFiles();
+            flashUiError(dropZone);
+            triggerButtonFeedback(e.currentTarget, false, `<i class="fa-solid fa-trash"></i> נוקה`, 1500);
             appendConsoleLog("[Upload] כל הקבצים שנטענו נוקו.");
         });
     }
@@ -646,14 +649,17 @@ document.addEventListener("DOMContentLoaded", () => {
             if (data.status === "success") {
                 parsedChatData = data;
                 renderUploadStats(data);
+                flashUiSuccess(dropZone);
 
                 const sourceStr = data.stats.chat_source || "Chat";
                 appendConsoleLog(`[Upload] ${accumulatedFiles.length} קבצים פוענחו ומוזגו בהצלחה! מקור: ${sourceStr}. סה"כ הודעות: ${data.stats.total_messages.toLocaleString()}.`);
             } else {
-                alert("שגיאה בפענוח הקבצים: " + (data.detail || "שגיאה כללית"));
+                flashUiError(dropZone);
+                appendConsoleLog(`[Upload Error] שגיאה בפענוח הקבצים: ${data.detail || "שגיאה כללית"}`);
             }
         } catch (err) {
-            alert("שגיאה בתקשורת עם השרת: " + err);
+            flashUiError(dropZone);
+            appendConsoleLog(`[Network Error] שגיאה בתקשורת עם השרת: ${err}`);
         }
     }
 
@@ -680,29 +686,8 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("statEnglishRatio").textContent = `${engPct}%`;
         document.getElementById("statMediaCount").textContent = (stats.media_omitted_count + (stats.urls_removed_count || 0)).toLocaleString();
 
-        const select = document.getElementById("targetFriendSelect");
-        select.innerHTML = "";
-        stats.top_senders.forEach(sender => {
-            const opt = document.createElement("option");
-            opt.value = sender;
-            opt.textContent = `${sender} (${stats.sender_counts[sender]} הודעות)`;
-            select.appendChild(opt);
-        });
-
-        const updateTargetPrompt = () => {
-            const targetName = select.value || "החבר שלי";
-            document.getElementById("personaNameInput").value = `${targetName} AI`;
-            document.getElementById("systemPromptInput").value = 
-                `You are now responding and speaking exactly like ${targetName}. Use the same speaking style, vocabulary, slang, and language mixing (Hebrew/English) exactly as it appeared in the chat logs.`;
-            
-            const aliasInput = document.getElementById("targetAliasesInput");
-            if (aliasInput && (!aliasInput.value || aliasInput.value === targetName)) {
-                aliasInput.value = targetName;
-            }
-        };
-
-        select.addEventListener("change", updateTargetPrompt);
-        updateTargetPrompt();
+        // Render participant role mapping list
+        renderParticipantRoleList(stats);
 
         const previewList = document.getElementById("chatPreviewList");
         previewList.innerHTML = "";
@@ -712,10 +697,102 @@ document.addEventListener("DOMContentLoaded", () => {
             div.innerHTML = `<div class="preview-sender">${escapeHtml(msg.sender)} (${msg.date} ${msg.time})</div><div>${escapeHtml(msg.content)}</div>`;
             previewList.appendChild(div);
         });
+
+        // Flash stats wrapper and role assignment box to guide user eyes with color
+        flashUiSuccess(document.getElementById("statsWrapper"));
+        flashUiSuccess(document.getElementById("previewCard"));
+        const roleBox = document.querySelector(".role-assignment-box");
+        if (roleBox) flashUiPurple(roleBox);
+    }
+
+    let participantRoles = {}; // { [senderName]: 'friend' | 'user' | 'ignore' }
+
+    function renderParticipantRoleList(stats, changedSender = null) {
+        const listEl = document.getElementById("participantRoleList");
+        if (!listEl) return;
+        listEl.innerHTML = "";
+
+        const senders = stats.top_senders || [];
+        if (senders.length === 0) {
+            listEl.innerHTML = `<p class="help-text" style="padding: 10px;">לא זוהו משתתפים בשיחות.</p>`;
+            return;
+        }
+
+        senders.forEach((sender, idx) => {
+            // Default role assignment if not set
+            if (!participantRoles[sender]) {
+                if (idx === 0) {
+                    participantRoles[sender] = 'friend';
+                } else if (idx === 1 || senders.length === 2) {
+                    participantRoles[sender] = 'user';
+                } else {
+                    participantRoles[sender] = 'ignore';
+                }
+            }
+
+            const count = stats.sender_counts[sender] || 0;
+            const currentRole = participantRoles[sender];
+            const wasJustChanged = changedSender === sender;
+
+            const row = document.createElement("div");
+            row.className = `participant-role-row role-${currentRole} ${wasJustChanged ? 'role-just-changed' : ''}`;
+            
+            let iconClass = "fa-robot";
+            if (currentRole === 'user') iconClass = "fa-user";
+            else if (currentRole === 'ignore') iconClass = "fa-eye-slash";
+
+            row.innerHTML = `
+                <div class="participant-info">
+                    <i class="fa-solid ${iconClass} role-icon" style="font-size: 1.15rem;"></i>
+                    <div>
+                        <span class="participant-name" title="${escapeHtml(sender)}">${escapeHtml(sender)}</span>
+                        <span class="participant-count">${count.toLocaleString()} הודעות</span>
+                    </div>
+                </div>
+                <div class="role-btn-group">
+                    <button type="button" class="btn-role ${currentRole === 'friend' ? 'active-friend' : ''}" data-role="friend">🤖 החבר (AI)</button>
+                    <button type="button" class="btn-role ${currentRole === 'user' ? 'active-user' : ''}" data-role="user">👤 אני (User)</button>
+                    <button type="button" class="btn-role ${currentRole === 'ignore' ? 'active-ignore' : ''}" data-role="ignore">⚪ התעלם</button>
+                </div>
+            `;
+
+            row.querySelectorAll(".btn-role").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const newRole = btn.getAttribute("data-role");
+                    participantRoles[sender] = newRole;
+                    renderParticipantRoleList(stats, sender);
+                });
+            });
+
+            listEl.appendChild(row);
+        });
+
+        updateTargetPromptFromRoles();
+    }
+
+    function updateTargetPromptFromRoles() {
+        const friendNames = Object.keys(participantRoles).filter(s => participantRoles[s] === 'friend');
+        const mainFriend = friendNames.length > 0 ? friendNames[0] : "החבר שלי";
+
+        const personaInput = document.getElementById("personaNameInput");
+        if (personaInput) personaInput.value = `${mainFriend} AI`;
+
+        const promptInput = document.getElementById("systemPromptInput");
+        if (promptInput) {
+            promptInput.value = 
+                `You are now responding and speaking exactly like ${mainFriend}. Use the same speaking style, vocabulary, slang, and language mixing (Hebrew/English) exactly as it appeared in the chat logs.`;
+        }
+
+        const selectEl = document.getElementById("targetFriendSelect");
+        if (selectEl) selectEl.value = friendNames.join(", ");
+        const aliasEl = document.getElementById("targetAliasesInput");
+        if (aliasEl) aliasEl.value = friendNames.join(", ");
     }
 
     document.getElementById("btnGoToDataset").addEventListener("click", () => {
         document.querySelector('[data-tab="datasetTab"]').click();
+        const datasetCard = document.querySelector("#datasetTab .card");
+        if (datasetCard) flashUiPurple(datasetCard);
     });
 
     // --- Slider Displays ---
@@ -744,15 +821,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- DATASET BUILDER ---
     document.getElementById("btnBuildDataset").addEventListener("click", async () => {
-        const targetFriend = document.getElementById("targetFriendSelect").value;
-        const aliasesVal = document.getElementById("targetAliasesInput") ? document.getElementById("targetAliasesInput").value.trim() : "";
+        const targetFriends = Object.keys(participantRoles).filter(s => participantRoles[s] === 'friend');
+        const userNames = Object.keys(participantRoles).filter(s => participantRoles[s] === 'user');
+        const btnBuild = document.getElementById("btnBuildDataset");
+        const roleBox = document.querySelector(".role-assignment-box");
 
-        const finalTargetParam = aliasesVal ? aliasesVal : targetFriend;
-
-        if (!targetFriend && !finalTargetParam) {
-            alert("אנא העלה קובץ צ'אט ובחר את שם החבר תחילה.");
+        if (targetFriends.length === 0) {
+            if (roleBox) flashUiError(roleBox);
+            triggerButtonFeedback(btnBuild, false, `<i class="fa-solid fa-triangle-exclamation"></i> לא נבחר חבר (AI)`, 3000);
             return;
         }
+
+        if (userNames.length === 0) {
+            if (roleBox) flashUiError(roleBox);
+            triggerButtonFeedback(btnBuild, false, `<i class="fa-solid fa-triangle-exclamation"></i> לא נבחר משתמש (אני)`, 3000);
+            return;
+        }
+
+        btnBuild.disabled = true;
+        btnBuild.classList.add("btn-loading-state");
+        btnBuild.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> יוצר דאטהסט JSONL...`;
 
         const systemPrompt = document.getElementById("systemPromptInput").value;
         const contextTurns = parseInt(document.getElementById("contextTurnsInput").value);
@@ -760,12 +848,15 @@ document.addEventListener("DOMContentLoaded", () => {
         const sessionGap = parseInt(document.getElementById("sessionGapInput") ? document.getElementById("sessionGapInput").value : 60);
         const includeFull = document.getElementById("includeFullSessionsCheck") ? document.getElementById("includeFullSessionsCheck").checked : true;
 
+        appendConsoleLog(`[Dataset] מייצר דאטהסט: פרסונה מאומנת = [${targetFriends.join(', ')}], שואלים (אני) = [${userNames.join(', ')}]...`);
+
         try {
             const res = await fetch("/api/build-dataset", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    target_friend: finalTargetParam,
+                    target_friend: targetFriends,
+                    user_names: userNames,
                     system_prompt: systemPrompt,
                     context_turns: contextTurns,
                     val_split: valSplit,
@@ -777,20 +868,45 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (data.status === "success") {
                 datasetMeta = data;
-                document.getElementById("datasetStatsBadge").style.display = "flex";
+                const statsBadge = document.getElementById("datasetStatsBadge");
+                if (statsBadge) {
+                    statsBadge.style.display = "flex";
+                    flashUiSuccess(statsBadge);
+                }
                 if (document.getElementById("dsTotalSessions")) document.getElementById("dsTotalSessions").textContent = data.total_sessions || 0;
                 if (document.getElementById("dsAvgSessionLen")) document.getElementById("dsAvgSessionLen").textContent = data.avg_session_length || 0;
                 document.getElementById("dsTotalSamples").textContent = data.total_samples;
                 document.getElementById("dsTrainSamples").textContent = data.train_samples;
                 document.getElementById("dsValSamples").textContent = data.val_samples;
 
-                document.getElementById("jsonPreviewBox").textContent = JSON.stringify(data.sample_preview, null, 2);
-                appendConsoleLog(`[Dataset] דאטהסט JSONL נוצר בהצלחה! נמצאו ${data.total_sessions} שיחות נפרדות (פער > ${data.session_gap_minutes} דקות). ${data.train_samples} דוגמאות אימון.`);
+                const jsonBox = document.getElementById("jsonPreviewBox");
+                if (jsonBox) {
+                    jsonBox.textContent = JSON.stringify(data.sample_preview, null, 2);
+                    flashUiSuccess(jsonBox);
+                }
+
+                const currentCard = btnBuild.closest(".card");
+                if (currentCard) flashUiSuccess(currentCard);
+
+                appendConsoleLog(`[Dataset] דאטהסט JSONL נוצר בהצלחה! ${data.total_samples} דוגמאות אימון שחוברו בין [${userNames.join(', ')}] לבין [${targetFriends.join(', ')}].`);
+
+                btnBuild.classList.remove("btn-loading-state");
+                triggerButtonFeedback(btnBuild, true, `<i class="fa-solid fa-circle-check"></i> הדאטהסט נוצר בהצלחה! (${data.total_samples} דוגמאות)`, 4000);
             } else {
-                alert("שגיאה ביצירת הדאטהסט.");
+                btnBuild.classList.remove("btn-loading-state");
+                const currentCard = btnBuild.closest(".card");
+                if (currentCard) flashUiError(currentCard);
+                triggerButtonFeedback(btnBuild, false, `<i class="fa-solid fa-triangle-exclamation"></i> שגיאה ביצירת הדאטהסט`, 3500);
+                appendConsoleLog(`[Dataset Error] שגיאה ביצירת הדאטהסט: ${data.detail || "שגיאה כללית"}`);
             }
         } catch (err) {
-            alert("שגיאה בתקשורת: " + err);
+            btnBuild.classList.remove("btn-loading-state");
+            const currentCard = btnBuild.closest(".card");
+            if (currentCard) flashUiError(currentCard);
+            triggerButtonFeedback(btnBuild, false, `<i class="fa-solid fa-triangle-exclamation"></i> שגיאה בתקשורת`, 3500);
+            appendConsoleLog(`[Network Error] שגיאה בתקשורת: ${err}`);
+        } finally {
+            btnBuild.disabled = false;
         }
     });
 
@@ -845,7 +961,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const resumePresetId = document.getElementById("resumePresetSelect") ? document.getElementById("resumePresetSelect").value : null;
 
         if (trainMode === "continue" && (!resumePresetId || resumePresetId === "")) {
-            alert("אנא בחר מודל קיים להמשך אימון מתוך הרשימה.");
+            const selectEl = document.getElementById("resumePresetSelect");
+            if (selectEl) flashUiError(selectEl);
+            triggerButtonFeedback(btnStartTraining, false, `<i class="fa-solid fa-triangle-exclamation"></i> בחר מודל להמשך`, 2500);
             return;
         }
 
@@ -875,9 +993,12 @@ document.addEventListener("DOMContentLoaded", () => {
             const data = await res.json();
             listenToTrainingLogs();
         } catch (err) {
-            alert("שגיאה בהפעלת האימון: " + err);
             btnStartTraining.style.display = "inline-flex";
             btnStopTraining.style.display = "none";
+            const trainCard = btnStartTraining.closest(".card");
+            if (trainCard) flashUiError(trainCard);
+            triggerButtonFeedback(btnStartTraining, false, `<i class="fa-solid fa-triangle-exclamation"></i> שגיאה בהפעלה`, 3000);
+            appendConsoleLog(`[Training Error] שגיאה בהפעלת האימון: ${err}`);
         }
     });
 
@@ -924,12 +1045,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 appendConsoleLog("[Training] 🎉 האימון הסתיים בהצלחה! המודל נשמר ב-Presets.");
                 btnStartTraining.style.display = "inline-flex";
                 btnStopTraining.style.display = "none";
+                triggerButtonFeedback(btnStartTraining, true, `<i class="fa-solid fa-fire"></i> האימון הסתיים בהצלחה!`, 5000);
+                const metrics = document.querySelector(".metrics-dashboard");
+                if (metrics) flashUiSuccess(metrics);
                 eventSource.close();
                 loadPresets();
             } else if (data.state === "error") {
                 appendConsoleLog(`[Training] ❌ שגיאה באימון: ${data.message}`);
                 btnStartTraining.style.display = "inline-flex";
                 btnStopTraining.style.display = "none";
+                triggerButtonFeedback(btnStartTraining, false, `<i class="fa-solid fa-triangle-exclamation"></i> שגיאה באימון`, 4000);
+                const metrics = document.querySelector(".metrics-dashboard");
+                if (metrics) flashUiError(metrics);
                 eventSource.close();
             }
         };
@@ -1037,11 +1164,13 @@ document.addEventListener("DOMContentLoaded", () => {
         return div;
     }
 
-    document.getElementById("btnClearChat").addEventListener("click", () => {
+    document.getElementById("btnClearChat").addEventListener("click", (e) => {
         const presetKey = activePresetId || "default";
         chatHistoriesByPreset[presetKey] = [];
         const friendName = document.getElementById("friendNameDisplay").textContent || "החבר AI";
         renderChatHistory(friendName, []);
+        flashUiCyan(chatContainer);
+        triggerButtonFeedback(e.currentTarget, true, `<i class="fa-solid fa-trash"></i> היסטוריה נוקתה`, 1500);
     });
 
     // --- HELPER FUNCTIONS ---
@@ -1057,5 +1186,56 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function escapeHtml(str) {
         return (str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    // --- DIRECT UI COLOR FEEDBACK SYSTEM (NO CHAT MESSAGES / NO TOASTS) ---
+    function flashUiSuccess(el) {
+        if (!el) return;
+        el.classList.remove("ui-flash-success", "ui-flash-error", "ui-flash-purple", "ui-flash-cyan");
+        void el.offsetWidth;
+        el.classList.add("ui-flash-success");
+        setTimeout(() => el.classList.remove("ui-flash-success"), 1600);
+    }
+
+    function flashUiError(el) {
+        if (!el) return;
+        el.classList.remove("ui-flash-success", "ui-flash-error", "ui-flash-purple", "ui-flash-cyan");
+        void el.offsetWidth;
+        el.classList.add("ui-flash-error");
+        setTimeout(() => el.classList.remove("ui-flash-error"), 1600);
+    }
+
+    function flashUiPurple(el) {
+        if (!el) return;
+        el.classList.remove("ui-flash-success", "ui-flash-error", "ui-flash-purple", "ui-flash-cyan");
+        void el.offsetWidth;
+        el.classList.add("ui-flash-purple");
+        setTimeout(() => el.classList.remove("ui-flash-purple"), 1600);
+    }
+
+    function flashUiCyan(el) {
+        if (!el) return;
+        el.classList.remove("ui-flash-success", "ui-flash-error", "ui-flash-purple", "ui-flash-cyan");
+        void el.offsetWidth;
+        el.classList.add("ui-flash-cyan");
+        setTimeout(() => el.classList.remove("ui-flash-cyan"), 1600);
+    }
+
+    function triggerButtonFeedback(btn, isSuccess, tempHtml = null, duration = 3000) {
+        if (!btn) return;
+        if (!btn.dataset.origHtml) {
+            btn.dataset.origHtml = btn.innerHTML;
+        }
+        btn.classList.remove("btn-loading-state", "btn-success-state", "btn-error-state");
+        btn.classList.add(isSuccess ? "btn-success-state" : "btn-error-state");
+        if (tempHtml) btn.innerHTML = tempHtml;
+
+        setTimeout(() => {
+            btn.classList.remove("btn-success-state", "btn-error-state");
+            if (btn.dataset.origHtml) {
+                btn.innerHTML = btn.dataset.origHtml;
+                delete btn.dataset.origHtml;
+            }
+        }, duration);
     }
 });

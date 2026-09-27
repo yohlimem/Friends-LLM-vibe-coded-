@@ -116,16 +116,23 @@
                             <span class="badge" id="statSourceBadge" style="background: rgba(139, 92, 246, 0.2); color: var(--accent-purple); padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 0.85rem;"><i class="fa-solid fa-comments"></i> WhatsApp & Discord</span>
                         </div>
                         
-                        <div class="form-group margin-bottom">
-                            <label for="targetFriendSelect"><strong><i class="fa-solid fa-user-check"></i> בחר את השם הראשי של החבר:</strong></label>
-                            <select id="targetFriendSelect" class="form-control select-lg"></select>
+                        <!-- Role Assignment Box: Choose who is AI Friend and who is User/Me -->
+                        <div class="role-assignment-box margin-bottom">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <label style="font-size: 0.95rem;"><strong><i class="fa-solid fa-users-viewfinder"></i> חלוקת תפקידים בשיחה (מי החבר ומי אני):</strong></label>
+                                <span class="badge" style="background: rgba(255, 255, 255, 0.08); font-size: 0.75rem;">קביעת תפקיד לכל משתתף</span>
+                            </div>
+                            <p class="help-text" style="margin-bottom: 10px; font-size: 0.82rem;">
+                                סמן עבור כל משתתף: <strong style="color: var(--accent-purple);">🤖 החבר (AI)</strong> = מי שהמודל ילמד לחקות | <strong style="color: var(--accent-cyan);">👤 אני (User)</strong> = מי שה-AI ילמד לענות לו | <strong style="color: var(--text-dim);">⚪ התעלם</strong> = יסונן מהאימון.
+                            </p>
+                            <div id="participantRoleList" class="participant-role-list">
+                                <!-- Populated dynamically via JS -->
+                            </div>
                         </div>
 
-                        <div class="form-group margin-bottom">
-                            <label for="targetAliasesInput"><strong><i class="fa-solid fa-users-gear"></i> כינויים נוספים בפלטפורמות שונות (מופרדים בפסיק):</strong></label>
-                            <input type="text" id="targetAliasesInput" class="form-control" placeholder="למשל: אלון, alon_pro, alon#0001">
-                            <small class="help-text">אם לחבר יש שם שונה בוואטסאפ ובדיסקורד, רשום כאן את הניקים שלו והמערכת תאסוף את הודעותיו מכל הפלטפורמות!</small>
-                        </div>
+                        <!-- Hidden helper inputs -->
+                        <input type="hidden" id="targetFriendSelect">
+                        <input type="hidden" id="targetAliasesInput">
 
                         <div class="stats-grid">
                             <div class="stat-card">
@@ -186,15 +193,6 @@
                         <div class="form-group">
                             <label for="systemPromptInput"><strong>System Prompt (הנחיה למודל ה-AI):</strong></label>
                             <textarea id="systemPromptInput" rows="5" class="form-control" dir="rtl"></textarea>
-                            
-                            <!-- Prompt Templates Bar -->
-                            <div class="prompt-templates-bar">
-                                <span><i class="fa-solid fa-bolt"></i> תבניות מהירות:</span>
-                                <button type="button" class="btn-tag" id="btnTplSarcastic">🎭 סרקסטי ומצחיק</button>
-                                <button type="button" class="btn-tag" id="btnTplGamer">🎮 גיימר (Heb/Eng)</button>
-                                <button type="button" class="btn-tag" id="btnTplCasual">💬 יומיומי וקצר</button>
-                                <button type="button" class="btn-tag" id="btnTplDirect">⚡ תכליתי וחד</button>
-                            </div>
                         </div>
 
                         <!-- Prompt Writing Guide Advice Box -->
@@ -389,11 +387,6 @@
                             <div class="form-group margin-bottom">
                                 <label for="chatSystemPromptInput"><strong>System Prompt לפרסונה הטעונה בצ'אט:</strong></label>
                                 <textarea id="chatSystemPromptInput" rows="4" class="form-control" placeholder="הכנס הנחיה ייחודית לפרסונה זו בזמן צ'אט..." dir="rtl"></textarea>
-                                <div class="prompt-templates-bar margin-top">
-                                    <button type="button" class="btn-tag" id="btnChatTplFunny">🎭 הומוריסטי</button>
-                                    <button type="button" class="btn-tag" id="btnChatTplShort">💬 תשובות קצרות</button>
-                                    <button type="button" class="btnChatTplEng btn-tag" id="btnChatTplEng">🇬🇧 Heb+Eng</button>
-                                </div>
                                 <button class="btn accent-btn full-width margin-top" id="btnSaveChatPrompt">
                                     <i class="fa-solid fa-floppy-disk"></i> שמור System Prompt לפרסונה זו
                                 </button>

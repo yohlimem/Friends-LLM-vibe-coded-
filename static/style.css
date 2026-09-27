@@ -31,10 +31,83 @@
     --font-display: 'Outfit', 'Inter', sans-serif;
 }
 
+/* ==============================================================================
+   Ultra-Sleek Stylized Custom Scrollbars
+   ============================================================================== */
+/* Standard Firefox support */
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(139, 92, 246, 0.45) rgba(10, 13, 20, 0.7);
+}
+
+/* Chrome, Edge, Safari, Opera (Webkit) */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(10, 13, 20, 0.65);
+    border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(99, 102, 241, 0.5) 0%, rgba(139, 92, 246, 0.7) 100%);
+    border-radius: 8px;
+    border: 2px solid rgba(10, 13, 20, 0.75);
+    background-clip: padding-box;
+    transition: all 0.25s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(99, 102, 241, 0.85) 0%, rgba(139, 92, 246, 0.95) 100%);
+    box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+}
+
+::-webkit-scrollbar-thumb:active {
+    background: linear-gradient(180deg, #6366f1 0%, #a855f7 100%);
+}
+
+::-webkit-scrollbar-corner {
+    background: rgba(10, 13, 20, 0.8);
+}
+
+/* Fine-tuned scrollbars for inner scrollable panels */
+.chat-messages-container::-webkit-scrollbar,
+.console-body::-webkit-scrollbar,
+.participant-role-list::-webkit-scrollbar,
+.preview-list::-webkit-scrollbar,
+.chat-preview-list::-webkit-scrollbar,
+pre::-webkit-scrollbar,
+textarea::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.chat-messages-container::-webkit-scrollbar-thumb,
+.console-body::-webkit-scrollbar-thumb,
+.participant-role-list::-webkit-scrollbar-thumb,
+.preview-list::-webkit-scrollbar-thumb,
+.chat-preview-list::-webkit-scrollbar-thumb,
+pre::-webkit-scrollbar-thumb,
+textarea::-webkit-scrollbar-thumb {
+    background: rgba(139, 92, 246, 0.35);
+    border-radius: 6px;
+    border: 1px solid rgba(10, 13, 20, 0.5);
+}
+
+.chat-messages-container::-webkit-scrollbar-thumb:hover,
+.console-body::-webkit-scrollbar-thumb:hover,
+.participant-role-list::-webkit-scrollbar-thumb:hover,
+.preview-list::-webkit-scrollbar-thumb:hover,
+.chat-preview-list::-webkit-scrollbar-thumb:hover,
+pre::-webkit-scrollbar-thumb:hover,
+textarea::-webkit-scrollbar-thumb:hover {
+    background: rgba(139, 92, 246, 0.75);
+    box-shadow: 0 0 8px rgba(139, 92, 246, 0.4);
 }
 
 body {
@@ -774,17 +847,6 @@ body {
     border-radius: var(--radius-md);
 }
 
-/* Prompt Templates & Guide Box */
-.prompt-templates-bar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px;
-    margin-top: 8px;
-    font-size: 12px;
-    color: var(--text-muted);
-}
-
 .btn-tag {
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid var(--border-color);
@@ -949,4 +1011,280 @@ body {
     transform: translateY(-2px);
     box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
 }
+
+/* Participant Role Assignment Styles */
+.role-assignment-box {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.participant-role-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 240px;
+    overflow-y: auto;
+    padding-left: 4px;
+}
+
+.participant-role-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    padding: 9px 12px;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.participant-role-row:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Distinct Role Row Colors for Instant Visual Feedback */
+.participant-role-row.role-friend {
+    background: rgba(139, 92, 246, 0.14) !important;
+    border-color: rgba(139, 92, 246, 0.6) !important;
+    box-shadow: inset 0 0 16px rgba(139, 92, 246, 0.12), 0 0 14px rgba(139, 92, 246, 0.22) !important;
+}
+
+.participant-role-row.role-friend .role-icon {
+    color: var(--accent-purple) !important;
+    filter: drop-shadow(0 0 6px rgba(139, 92, 246, 0.6));
+}
+
+.participant-role-row.role-friend .participant-name {
+    color: #ede9fe;
+}
+
+.participant-role-row.role-user {
+    background: rgba(6, 182, 212, 0.14) !important;
+    border-color: rgba(6, 182, 212, 0.6) !important;
+    box-shadow: inset 0 0 16px rgba(6, 182, 212, 0.12), 0 0 14px rgba(6, 182, 212, 0.22) !important;
+}
+
+.participant-role-row.role-user .role-icon {
+    color: var(--accent-cyan) !important;
+    filter: drop-shadow(0 0 6px rgba(6, 182, 212, 0.6));
+}
+
+.participant-role-row.role-user .participant-name {
+    color: #cffafe;
+}
+
+.participant-role-row.role-ignore {
+    background: rgba(255, 255, 255, 0.02) !important;
+    border: 1px dashed rgba(255, 255, 255, 0.12) !important;
+    opacity: 0.45;
+}
+
+.participant-role-row.role-ignore:hover {
+    opacity: 0.85;
+}
+
+.participant-role-row.role-ignore .role-icon {
+    color: var(--text-dim) !important;
+}
+
+.participant-role-row.role-just-changed {
+    animation: roleSelectPulse 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes roleSelectPulse {
+    0% { transform: scale(0.98); filter: brightness(1.35); }
+    50% { transform: scale(1.01); filter: brightness(1.15); }
+    100% { transform: scale(1); filter: brightness(1); }
+}
+
+.participant-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.participant-name {
+    font-weight: 600;
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 180px;
+    transition: color 0.2s ease;
+}
+
+.participant-count {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.06);
+    padding: 2px 7px;
+    border-radius: 10px;
+}
+
+.role-btn-group {
+    display: flex;
+    gap: 5px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 4px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.btn-role {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid transparent;
+    color: var(--text-muted);
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: var(--font-hebrew);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    white-space: nowrap;
+}
+
+.btn-role:hover {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+}
+
+.btn-role.active-friend {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed) !important;
+    border-color: #a78bfa !important;
+    color: #ffffff !important;
+    font-weight: 600;
+    box-shadow: 0 0 14px rgba(139, 92, 246, 0.6), inset 0 0 8px rgba(255, 255, 255, 0.2) !important;
+    transform: scale(1.04);
+}
+
+.btn-role.active-user {
+    background: linear-gradient(135deg, #06b6d4, #0891b2) !important;
+    border-color: #67e8f9 !important;
+    color: #ffffff !important;
+    font-weight: 600;
+    box-shadow: 0 0 14px rgba(6, 182, 212, 0.6), inset 0 0 8px rgba(255, 255, 255, 0.2) !important;
+    transform: scale(1.04);
+}
+
+.btn-role.active-ignore {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    color: var(--text-dim) !important;
+    font-weight: 500;
+}
+
+/* ==============================================================================
+   UI Color Transition & Flash Feedback System (Pure Visual Color Changes)
+   ============================================================================== */
+.ui-flash-success {
+    animation: flashGreenBorder 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+}
+
+.ui-flash-error {
+    animation: flashRedBorder 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+}
+
+.ui-flash-purple {
+    animation: flashPurpleBorder 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+}
+
+.ui-flash-cyan {
+    animation: flashCyanBorder 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+}
+
+@keyframes flashGreenBorder {
+    0% {
+        border-color: #10b981 !important;
+        box-shadow: 0 0 35px rgba(16, 185, 129, 0.65), inset 0 0 15px rgba(16, 185, 129, 0.2) !important;
+    }
+    100% {
+        border-color: var(--border-color);
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
+    }
+}
+
+@keyframes flashRedBorder {
+    0% {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 35px rgba(239, 68, 68, 0.7), inset 0 0 15px rgba(239, 68, 68, 0.2) !important;
+    }
+    100% {
+        border-color: var(--border-color);
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
+    }
+}
+
+@keyframes flashPurpleBorder {
+    0% {
+        border-color: #8b5cf6 !important;
+        box-shadow: 0 0 35px rgba(139, 92, 246, 0.65), inset 0 0 15px rgba(139, 92, 246, 0.2) !important;
+    }
+    100% {
+        border-color: var(--border-color);
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
+    }
+}
+
+@keyframes flashCyanBorder {
+    0% {
+        border-color: #06b6d4 !important;
+        box-shadow: 0 0 35px rgba(6, 182, 212, 0.65), inset 0 0 15px rgba(6, 182, 212, 0.2) !important;
+    }
+    100% {
+        border-color: var(--border-color);
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
+    }
+}
+
+/* Button Direct Color Feedback States */
+.btn.btn-success-state,
+.btn-tag.btn-success-state {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    color: #ffffff !important;
+    border-color: #34d399 !important;
+    box-shadow: 0 0 25px rgba(16, 185, 129, 0.65), inset 0 0 10px rgba(255, 255, 255, 0.25) !important;
+    transform: scale(1.02);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.btn.btn-error-state,
+.btn-tag.btn-error-state {
+    background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%) !important;
+    color: #ffffff !important;
+    border-color: #f87171 !important;
+    box-shadow: 0 0 25px rgba(239, 68, 68, 0.65), inset 0 0 10px rgba(255, 255, 255, 0.25) !important;
+    animation: buttonErrorShake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.btn.btn-loading-state {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+    border-color: #a78bfa !important;
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.5) !important;
+    opacity: 0.9;
+    cursor: wait !important;
+    pointer-events: none;
+    animation: buttonPulse 1.2s infinite alternate;
+}
+
+@keyframes buttonPulse {
+    0% { filter: brightness(1); box-shadow: 0 0 15px rgba(139, 92, 246, 0.4); }
+    100% { filter: brightness(1.2); box-shadow: 0 0 28px rgba(139, 92, 246, 0.7); }
+}
+
+@keyframes buttonErrorShake {
+    10%, 90% { transform: translate3d(-2px, 0, 0); }
+    20%, 80% { transform: translate3d(3px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+    40%, 60% { transform: translate3d(4px, 0, 0); }
+}
+
+
 
